@@ -28,7 +28,7 @@ import tensorflow as tf
 WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg19_weights_tf_dim_ordering_tf_kernels.h5'
 WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg19_weights_tf_dim_ordering_tf_kernels_notop.h5'
 DATASET_DIR = "cifar-10"
-
+IMG_RESIZE = 224
 
 def VGG19(include_top=True, weights='imagenet', input_tensor=None, input_shape=None, pooling=None, classes=1000):
     """Instantiates the VGG19 architecture.
@@ -100,7 +100,7 @@ def VGG19(include_top=True, weights='imagenet', input_tensor=None, input_shape=N
 
     # Block 1
 
-    x = Lambda(lambda x: tf.image.resize_images(x, (224, 224)))(img_input)
+    x = Lambda(lambda x: tf.image.resize_images(x, (IMG_RESIZE, IMG_RESIZE)))(img_input)
     x = Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv1')(x)
     x = Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv2')(x)
     x = MaxPooling2D((2, 2), strides=(2, 2), name='block1_pool')(x)

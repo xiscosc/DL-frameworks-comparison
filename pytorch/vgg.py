@@ -2,10 +2,11 @@ from __future__ import print_function
 import argparse
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
+
+import time
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
@@ -38,13 +39,13 @@ kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
 print('==> Preparing data..')
 transform_train = transforms.Compose([
-    transforms.RandomCrop(32, padding=4),
-    transforms.RandomHorizontalFlip(),
+    transforms.Scale(size=224),
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
 transform_test = transforms.Compose([
+    transforms.Scale(size=224),
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
@@ -151,6 +152,7 @@ def train(epoch):
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
+        start = time.time()
         if use_cuda:
             inputs, targets = inputs.cuda(), targets.cuda()
         optimizer.zero_grad()
@@ -164,9 +166,11 @@ def train(epoch):
         _, predicted = torch.max(outputs.data, 1)
         total += targets.size(0)
         correct += predicted.eq(targets.data).cpu().sum()
-
-        print('Batch %d / %d Loss: %.3f | Acc: %.3f%% (%d/%d)'
-              % (batch_idx, len(trainloader), train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+        time_elapsed = time.time() - start
+        img_sec = args.batch_size / time_elapsed
+        print('Batch %d / %d | Loss: %.3f | Acc: %.3f%% (%d/%d) | %.3f img/sec'
+              % (batch_idx, len(trainloader), train_loss / (batch_idx + 1), 100. * correct / total, correct, total,
+                 img_sec))
 
 
 def test(epoch):
