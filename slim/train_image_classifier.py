@@ -559,6 +559,7 @@ def main(_):
     ###########################
     custom_train(
         train_tensor,
+        batch_size=FLAGS.batch_size,
         num_clones=FLAGS.num_clones,
         logdir=FLAGS.train_dir,
         master=FLAGS.master,

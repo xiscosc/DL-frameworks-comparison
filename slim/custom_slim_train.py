@@ -454,7 +454,7 @@ def _wait_for_step(sess, global_step, step):
     time.sleep(1.0)
 
 
-def train_step(sess, train_op, global_step, train_step_kwargs, num_clones):
+def train_step(sess, train_op, global_step, train_step_kwargs):
   """Function that takes a gradient step and specifies whether to stop.
 
   Args:
@@ -487,6 +487,8 @@ def train_step(sess, train_op, global_step, train_step_kwargs, num_clones):
                                         options=trace_run_options,
                                         run_metadata=run_metadata)
   time_elapsed = time.time() - start_time
+  images = train_step_kwargs['batch_size'] * train_step_kwargs['num_clones']
+  images_sec = images/time_elapsed
 
   if run_metadata is not None:
     tl = timeline.Timeline(run_metadata.step_stats)
@@ -502,8 +504,10 @@ def train_step(sess, train_op, global_step, train_step_kwargs, num_clones):
 
   if 'should_log' in train_step_kwargs:
     if sess.run(train_step_kwargs['should_log']):
-      logging.info('global step %d: loss = %.4f (%.3f sec/step)',
-                   np_global_step, total_loss, time_elapsed)
+
+
+      logging.info('global step %d: loss = %.4f (%.3f img/sec)',
+                   np_global_step, total_loss, images_sec)
 
   # TODO(nsilberman): figure out why we can't put this into sess.run. The
   # issue right now is that the stop check depends on the global step. The
@@ -553,7 +557,8 @@ def train(train_op,
           sync_optimizer=None,
           session_config=None,
           trace_every_n_steps=None,
-          num_clones=1):
+          num_clones=1,
+          batch_size=32):
   """Runs a training loop using a TensorFlow supervisor.
 
   When the sync_optimizer is supplied, gradient updates are applied
@@ -697,6 +702,9 @@ def train(train_op,
     if train_step_kwargs == _USE_DEFAULT:
       with ops.name_scope('train_step'):
         train_step_kwargs = {}
+
+        train_step_kwargs['num_clones'] = num_clones
+        train_step_kwargs['batch_size'] = batch_size
 
         if number_of_steps:
           should_stop_op = math_ops.greater_equal(global_step, number_of_steps)

@@ -305,15 +305,17 @@ def preprocess_for_train(image,
   Returns:
     A preprocessed image.
   """
-  resize_side = tf.random_uniform(
-      [], minval=resize_side_min, maxval=resize_side_max+1, dtype=tf.int32)
-
-  image = _aspect_preserving_resize(image, resize_side)
-  image = _random_crop([image], output_height, output_width)[0]
-  image.set_shape([output_height, output_width, 3])
-  image = tf.to_float(image)
-  image = tf.image.random_flip_left_right(image)
-  return _mean_image_subtraction(image, [_R_MEAN, _G_MEAN, _B_MEAN])
+  # resize_side = tf.random_uniform(
+  #     [], minval=resize_side_min, maxval=resize_side_max+1, dtype=tf.int32)
+  #
+  # image = _aspect_preserving_resize(image, resize_side)
+  # image = _random_crop([image], output_height, output_width)[0]
+  # image.set_shape([output_height, output_width, 3])
+  # image = tf.to_float(image)
+  # image = tf.image.random_flip_left_right(image)
+  # return _mean_image_subtraction(image, [_R_MEAN, _G_MEAN, _B_MEAN])
+  # return _aspect_preserving_resize(image, tf.constant(48, dtype=tf.int32))
+  return tf.image.resize_images(image, (output_height, output_width))
 
 
 def preprocess_for_eval(image, output_height, output_width, resize_side):
