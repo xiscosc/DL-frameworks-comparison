@@ -251,6 +251,8 @@ import os
 import sys
 import time
 
+import tensorflow as tf
+
 from tensorflow.contrib.framework.python.ops import variables
 from tensorflow.contrib.training.python.training import training
 from tensorflow.core.protobuf import config_pb2
@@ -261,7 +263,6 @@ from tensorflow.python.framework import ops
 from tensorflow.python.lib.io import file_io
 from tensorflow.python.ops import clip_ops
 from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import lookup_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import variables as tf_variables
 from tensorflow.python.platform import tf_logging as logging
@@ -271,6 +272,11 @@ from tensorflow.python.training import saver as tf_saver
 from tensorflow.python.training import supervisor
 from tensorflow.python.training import sync_replicas_optimizer
 from tensorflow.python.training import training_util
+
+if tf.__version__ == '1.0.0': # MINOTAURO TRICK
+    from tensorflow.python.ops import data_flow_ops as table_ops
+else:
+    from tensorflow.python.ops import lookup_ops as table_ops
 
 __all__ = [
     'add_gradients_summaries', 'clip_gradient_norms', 'multiply_gradients',
@@ -671,7 +677,7 @@ def train(train_op,
       if local_init_op == _USE_DEFAULT:
         local_init_op = control_flow_ops.group(
             tf_variables.local_variables_initializer(),
-            lookup_ops.tables_initializer())
+            table_ops.tables_initializer())
 
       if sync_optimizer is not None and isinstance(sync_optimizer, list):
         with ops.control_dependencies([local_init_op] if local_init_op is

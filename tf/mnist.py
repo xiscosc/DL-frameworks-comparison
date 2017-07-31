@@ -31,8 +31,10 @@ import tensorflow as tf
 
 FLAGS = None
 
-BATCH_SIZE = 128
-N_ITERATIONS = 500
+TRAINING_SET = 60000
+
+BATCH_SIZE = 1
+N_ITERATIONS = int(TRAINING_SET/BATCH_SIZE)
 N_EPCOCHS = 4
 
 
@@ -62,9 +64,10 @@ def main(_):
     tf.global_variables_initializer().run()
     # Train
     for epochid in range(N_EPCOCHS):
-        print("Running epoch %d ..." % epochid)
+        print("Running epoch %d ..." % (epochid+1))
         for iterid in range(N_ITERATIONS):
-            sys.stdout.write('\r %d/%d' % (iterid+1, N_ITERATIONS))
+            percent = (100*(iterid+1))/N_ITERATIONS
+            sys.stdout.write('\r %.f %%' % (percent))
             batch_xs, batch_ys = mnist.train.next_batch(batch_size=BATCH_SIZE)
             sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
 
