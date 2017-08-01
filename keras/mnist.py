@@ -16,6 +16,7 @@ from keras import backend as K
 batch_size = 128
 num_classes = 10
 epochs = 12
+tensorboard_dir = "tb"
 
 # input image dimensions
 img_rows, img_cols = 28, 28
@@ -54,6 +55,7 @@ model.add(Flatten())
 model.add(Dense(500, activation="relu"))
 model.add(Dense(num_classes, activation="softmax"))
 
+tbCallBack = keras.callbacks.TensorBoard(log_dir=tensorboard_dir, histogram_freq=1, write_graph=True, write_images=True)
 
 model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adadelta(),
@@ -63,7 +65,8 @@ model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
           verbose=1,
-          validation_data=(x_test, y_test))
+          validation_data=(x_test, y_test),
+          callbacks=[tbCallBack])
 score = model.evaluate(x_test, y_test, verbose=0)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
