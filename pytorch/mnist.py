@@ -9,7 +9,7 @@ from torch.autograd import Variable
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
-parser.add_argument('--batch-size', type=int, default=32, metavar='N',
+parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
@@ -19,7 +19,7 @@ parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
                     help='learning rate (default: 0.01)')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
                     help='SGD momentum (default: 0.5)')
-parser.add_argument('--no-cuda', action='store_true', default=False,
+parser.add_argument('--no-cuda', action='store_true', default=True,
                     help='disables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
@@ -80,7 +80,7 @@ print(model)
 if args.cuda:
     model.cuda()
 
-optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 
 
 def train(epoch):
@@ -91,7 +91,7 @@ def train(epoch):
         data, target = Variable(data), Variable(target)
         optimizer.zero_grad()
         output = model(data)
-        loss = F.nll_loss(output, target)
+        loss = F.cross_entropy(output, target)
         loss.backward()
         optimizer.step()
         if batch_idx % args.log_interval == 0:

@@ -33,9 +33,10 @@ FLAGS = None
 
 TRAINING_SET = 60000
 
-BATCH_SIZE = 1
+BATCH_SIZE = 64
+LEARNING_RATE = 0.01
+N_EPCOCHS = 10
 N_ITERATIONS = int(TRAINING_SET/BATCH_SIZE)
-N_EPCOCHS = 4
 
 
 def main(_):
@@ -51,14 +52,13 @@ def main(_):
     net = tf.layers.max_pooling2d(net, [2, 2], [2, 2])
     net = tf.contrib.layers.flatten(net)
     net = tf.layers.dense(net, 500, activation=tf.nn.relu)
-    y = tf.layers.dense(net, 10, activation=tf.nn.softmax)
+    y = tf.layers.dense(net, 10)
 
     # Define loss and optimizer
     y_ = tf.placeholder(tf.float32, [None, 10])
 
-    cross_entropy = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
-    train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
+    train_step = tf.train.AdadeltaOptimizer(learning_rate=LEARNING_RATE).minimize(cross_entropy)
 
     sess = tf.InteractiveSession()
     tf.global_variables_initializer().run()
@@ -67,7 +67,7 @@ def main(_):
         print("Running epoch %d ..." % (epochid+1))
         for iterid in range(N_ITERATIONS):
             percent = (100*(iterid+1))/N_ITERATIONS
-            sys.stdout.write('\r %.f %%' % (percent))
+            sys.stdout.write('\r %.f%% (%d/%d) ' % (percent, (iterid+1), N_ITERATIONS))
             batch_xs, batch_ys = mnist.train.next_batch(batch_size=BATCH_SIZE)
             sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
 
