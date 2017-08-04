@@ -27,8 +27,14 @@ import tensorflow as tf
 
 WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg19_weights_tf_dim_ordering_tf_kernels.h5'
 WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg19_weights_tf_dim_ordering_tf_kernels_notop.h5'
+
 DATASET_DIR = "cifar-10"
 IMG_RESIZE = 224
+LEARNING_RATE = 0.0001
+WD = 1e-6
+EPOCHS = 200
+BATCH_SIZE = 32
+
 
 def VGG19(include_top=True, weights='imagenet', input_tensor=None, input_shape=None, pooling=None, classes=1000):
     """Instantiates the VGG19 architecture.
@@ -184,9 +190,8 @@ def VGG19(include_top=True, weights='imagenet', input_tensor=None, input_shape=N
 if __name__ == '__main__':
     model = VGG19(include_top=True, weights=None, classes=10, input_shape=(32, 32, 3))
 
-    batch_size = 32
     num_classes = 10
-    epochs = 200
+
     data_augmentation = False
 
     # The data, shuffled and split between train and test sets:
@@ -203,7 +208,7 @@ if __name__ == '__main__':
     x_train /= 255
     x_test /= 255
 
-    opt = rmsprop(lr=0.0001, decay=1e-6)
+    opt = rmsprop(lr=LEARNING_RATE, decay=WD)
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=opt,
@@ -211,8 +216,8 @@ if __name__ == '__main__':
 
     print("finish compilation")
     model.fit(x_train, y_train,
-              batch_size=batch_size,
-              epochs=epochs,
+              batch_size=BATCH_SIZE,
+              epochs=EPOCHS,
               validation_data=(x_test, y_test),
               shuffle=True)
 
