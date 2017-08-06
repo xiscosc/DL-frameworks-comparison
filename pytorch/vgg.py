@@ -50,10 +50,10 @@ transform_test = transforms.Compose([
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
-trainset = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_train)
+trainset = datasets.CIFAR10(root='/app/pytorch/data', train=False, download=True, transform=transform_train)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, **kwargs)
 
-testset = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
+testset = datasets.CIFAR10(root='/app/pytorch/data', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False, **kwargs)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
