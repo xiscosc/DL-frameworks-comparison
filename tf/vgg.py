@@ -3,7 +3,12 @@ import tensorflow as tf
 import datetime
 import cifar10
 
-slim = tf.contrib.slim
+from tensorflow.contrib import layers
+from tensorflow.contrib.framework.python.ops import arg_scope
+from tensorflow.contrib.layers.python.layers import layers as layers_lib
+from tensorflow.contrib.layers.python.layers import utils
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import variable_scope
 
 IMG_SIZE = 224
 LEARNING_RATE = 0.0001
@@ -13,17 +18,16 @@ N_EPOCHS = 10
 BATCH_SIZE = 32
 N_ITERATIONS = int(TRAINING_SET / BATCH_SIZE)
 
-
 tensorboard_dir = "tb"
 tensorboard_active = False
+
 
 def vgg_19(inputs,
            num_classes=1000,
            is_training=True,
            dropout_keep_prob=0.5,
            spatial_squeeze=True,
-           scope='vgg_19',
-           fc_conv_padding='VALID'):
+           scope='vgg_19'):
     """Oxford Net VGG 19-Layers version E Example.
     Note: All the fully_connected layers have been transformed to conv2d layers.
           To use in classification mode, resize input to 224x224.
@@ -36,45 +40,43 @@ def vgg_19(inputs,
       spatial_squeeze: whether or not should squeeze the spatial dimensions of the
         outputs. Useful to remove unnecessary dimensions for classification.
       scope: Optional scope for the variables.
-      fc_conv_padding: the type of padding to use for the fully connected layer
-        that is implemented as a convolutional layer. Use 'SAME' padding if you
-        are applying the network in a fully convolutional manner and want to
-        get a prediction map downsampled by a factor of 32 as an output.
-        Otherwise, the output prediction map will be (input / 32) - 6 in case of
-        'VALID' padding.
     Returns:
       the last op containing the log predictions and end_points dict.
     """
-    with tf.variable_scope(scope, 'vgg_19', [inputs]) as sc:
+    with variable_scope.variable_scope(scope, 'vgg_19', [inputs]) as sc:
         end_points_collection = sc.name + '_end_points'
         # Collect outputs for conv2d, fully_connected and max_pool2d.
-        with slim.arg_scope([slim.conv2d, slim.fully_connected, slim.max_pool2d],
-                            outputs_collections=end_points_collection):
-            net = slim.repeat(inputs, 2, slim.conv2d, 64, [3, 3], scope='conv1')
-            net = slim.max_pool2d(net, [2, 2], scope='pool1')
-            net = slim.repeat(net, 2, slim.conv2d, 128, [3, 3], scope='conv2')
-            net = slim.max_pool2d(net, [2, 2], scope='pool2')
-            net = slim.repeat(net, 4, slim.conv2d, 256, [3, 3], scope='conv3')
-            net = slim.max_pool2d(net, [2, 2], scope='pool3')
-            net = slim.repeat(net, 4, slim.conv2d, 512, [3, 3], scope='conv4')
-            net = slim.max_pool2d(net, [2, 2], scope='pool4')
-            net = slim.repeat(net, 4, slim.conv2d, 512, [3, 3], scope='conv5')
-            net = slim.max_pool2d(net, [2, 2], scope='pool5')
+        with arg_scope(
+                [layers.conv2d, layers_lib.fully_connected, layers_lib.max_pool2d],
+                outputs_collections=end_points_collection):
+            net = layers_lib.repeat(
+                inputs, 2, layers.conv2d, 64, [3, 3], scope='conv1')
+            net = layers_lib.max_pool2d(net, [2, 2], scope='pool1')
+            net = layers_lib.repeat(net, 2, layers.conv2d, 128, [3, 3], scope='conv2')
+            net = layers_lib.max_pool2d(net, [2, 2], scope='pool2')
+            net = layers_lib.repeat(net, 4, layers.conv2d, 256, [3, 3], scope='conv3')
+            net = layers_lib.max_pool2d(net, [2, 2], scope='pool3')
+            net = layers_lib.repeat(net, 4, layers.conv2d, 512, [3, 3], scope='conv4')
+            net = layers_lib.max_pool2d(net, [2, 2], scope='pool4')
+            net = layers_lib.repeat(net, 4, layers.conv2d, 512, [3, 3], scope='conv5')
+            net = layers_lib.max_pool2d(net, [2, 2], scope='pool5')
             # Use conv2d instead of fully_connected layers.
-            net = slim.conv2d(net, 4096, [7, 7], padding=fc_conv_padding, scope='fc6')
-            net = slim.dropout(net, dropout_keep_prob, is_training=is_training,
-                               scope='dropout6')
-            net = slim.conv2d(net, 4096, [1, 1], scope='fc7')
-            net = slim.dropout(net, dropout_keep_prob, is_training=is_training,
-                               scope='dropout7')
-            net = slim.conv2d(net, num_classes, [1, 1],
-                              activation_fn=None,
-                              normalizer_fn=None,
-                              scope='fc8')
+            net = layers.conv2d(net, 4096, [7, 7], padding='VALID', scope='fc6')
+            net = layers_lib.dropout(
+                net, dropout_keep_prob, is_training=is_training, scope='dropout6')
+            net = layers.conv2d(net, 4096, [1, 1], scope='fc7')
+            net = layers_lib.dropout(
+                net, dropout_keep_prob, is_training=is_training, scope='dropout7')
+            net = layers.conv2d(
+                net,
+                num_classes, [1, 1],
+                activation_fn=None,
+                normalizer_fn=None,
+                scope='fc8')
             # Convert end_points_collection into a end_point dict.
-            end_points = slim.utils.convert_collection_to_dict(end_points_collection)
+            end_points = utils.convert_collection_to_dict(end_points_collection)
             if spatial_squeeze:
-                net = tf.squeeze(net, [1, 2], name='fc8/squeezed')
+                net = array_ops.squeeze(net, [1, 2], name='fc8/squeezed')
                 end_points[sc.name + '/fc8'] = net
             return net, end_points
 
@@ -82,7 +84,7 @@ def vgg_19(inputs,
 def train():
     x, labels = cifar10.get_inputs(False, BATCH_SIZE)
     x2 = tf.image.resize_images(x, (IMG_SIZE, IMG_SIZE))
-    logits, endpoints = vgg_19(x2, 10, is_training=True)
+    logits, end_points = vgg_19(x2, 10, is_training=True)
     labels = tf.one_hot(labels, depth=10)
 
     with tf.name_scope('cross_entropy'):
@@ -118,14 +120,15 @@ def train():
             start = datetime.datetime.now()
             percent = (100 * (iterid + 1)) / N_ITERATIONS
             if time is None:
-                sys.stdout.write('\r %.f%% (%d/%d) \r\n ETA (All training): Estimating...' % (percent, (iterid + 1), N_ITERATIONS))
+                sys.stdout.write(
+                    '\r %.f%% (%d/%d) \r\n ETA (All training): Estimating...' % (percent, (iterid + 1), N_ITERATIONS))
             else:
                 total_time = time * (N_ITERATIONS - iterid - 1) * (N_EPOCHS - epochid - 1)
                 total_time_h = int(total_time / 3600)
                 total_time_min = int((total_time % 3600) / 60)
                 total_time_sec = int((total_time % 60))
                 sys.stdout.write('\r %.f%% (%d/%d)  ETA (All training): %d h %d m %d s' % (
-                percent, (iterid + 1), N_ITERATIONS, total_time_h, total_time_min, total_time_sec))
+                    percent, (iterid + 1), N_ITERATIONS, total_time_h, total_time_min, total_time_sec))
 
             if tensorboard_active:
                 if iterid % 10 == 0:
