@@ -16,6 +16,7 @@ WD = 1e-6
 TRAINING_SET = 50000
 N_EPOCHS = 10
 BATCH_SIZE = 32
+DATASET_DIR = "cifar10_data"
 N_ITERATIONS = int(TRAINING_SET / BATCH_SIZE)
 
 tensorboard_dir = "tb"
@@ -153,7 +154,7 @@ def train():
 
 
 def main(_):
-    cifar10.maybe_download_and_extract()
+    cifar10.maybe_download_and_extract(DATASET_DIR)
     train()
 
 
