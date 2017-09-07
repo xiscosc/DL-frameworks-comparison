@@ -35,10 +35,10 @@ TRAINING_SET = 60000
 
 BATCH_SIZE = 64
 LEARNING_RATE = 0.01
-N_EPOCHS = 10
+N_EPOCHS = 7
 N_ITERATIONS = int(TRAINING_SET/BATCH_SIZE)
 
-tensorboard_dir = "tb"
+tensorboard_dir = "tb/run1"
 tensorboard_active = True
 
 
@@ -108,7 +108,6 @@ def main(_):
         else:
             acc = sess.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels})
         print(" --> Accuracy: ", acc)
-
 
 
 if __name__ == '__main__':

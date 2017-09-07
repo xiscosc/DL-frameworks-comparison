@@ -297,6 +297,7 @@ def get_inputs(eval_data, batch_size, use_fp16=False):
 
 def maybe_download_and_extract(directory=FLAGS.data_dir):
     """Download and extract the tarball from Alex's website."""
+    FLAGS.data_dir = directory
     dest_directory = directory
     if not os.path.exists(dest_directory):
         os.makedirs(dest_directory)
